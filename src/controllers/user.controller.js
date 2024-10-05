@@ -3,6 +3,18 @@ import { ApiError } from "../utils/ApiError.js";
 import {User} from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+const generateAcessAndRefreshToken=async (userId) => {
+  try {
+    const user=await User.findById(userId)
+    const accessToken=user.generateAccessToken()
+    const refreshToken=user.generateRefreshToken()
+    user.refreshToken=refreshToken
+   await user.save({validateBeforeSave:false})
+   return{accessToken,refreshToken}
+  } catch (error) {
+    throw new ApiError(500,"someThing went Wrong  while generating AcessAndRefreshToken")
+  }
+}
 
 const registerUser=asyncHandler(async (req,res)=>{
     //take input from frontend
@@ -61,4 +73,32 @@ const registerUser=asyncHandler(async (req,res)=>{
 
 })
 
-export{registerUser}
+const loginUser=asyncHandler(async(req,res)=>{
+  //getting data from frontend
+   const {email,username,password}=req.body
+   //validating email||username
+   if(!username||!email){
+    throw new ApiError(400,"Username or email required")
+   }
+  const user=  await User.find({
+    $or:[{username},{email}]
+   })
+   if(!user){
+    throw new ApiError(404,"User doesn't Exist")
+   }
+   //validating password
+  const isPasswordVaild = await user.isPasswordCorrect(password) //we should use userobject we created to call local methods not User which is used for db methods
+  if(!isPasswordVaild){
+    throw new ApiError(401,"Invalid User Credentials")
+   }
+   const{accessToken,refreshToken}=await
+   generateAcessAndRefreshToken(user._id)
+
+   //paused at 27:00 min vide0 -15
+   
+})
+
+export{
+  registerUser,
+   loginUser
+}
