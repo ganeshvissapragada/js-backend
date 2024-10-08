@@ -91,14 +91,51 @@ const loginUser=asyncHandler(async(req,res)=>{
   if(!isPasswordVaild){
     throw new ApiError(401,"Invalid User Credentials")
    }
+   //generating tokens
    const{accessToken,refreshToken}=await
    generateAcessAndRefreshToken(user._id)
-
-   //paused at 27:00 min vide0 -15
-   
+  const loggedInUser= await User.findById(user._id).select("-password -refreshToken")
+//sending cookies
+const options ={
+  httpOnly:true,
+  secure:true
+}   
+   return res
+   .status(200)
+   .cookie("accessToken",accessToken,options)
+   .cookie("refreshToken",refreshToken,options)
+   .json(
+    new ApiResponse(
+      200,{
+        user:loggedInUser,accessToken,refreshToken
+      },
+      "User Logged in Sucessfully"
+    )
+   )
 })
-
+const logoutUser=asyncHandler(async(req,res)=>{
+  await User.findByIdAndUpdate(
+  req.user._id,{
+   //updating db
+    $set:{
+      refreshToken:undefined
+    }
+  },{
+    new:true
+  }
+)
+const options ={
+  httpOnly:true,
+  secure:true
+}
+return res
+.status(200)
+.clearCookie("accessToken",options)
+.clearCookie("refreshToken",options)
+.json(new ApiResponse(200,{},"user LoggedOut successfully"))
+})
 export{
   registerUser,
-   loginUser
+   loginUser,
+   logoutUser
 }
