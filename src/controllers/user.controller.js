@@ -3,7 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import {User} from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-const generateAcessAndRefreshToken=async (userId) => {
+const generateAccessAndRefreshToken=async (userId) => {
   try {
     const user=await User.findById(userId)
     const accessToken=user.generateAccessToken()
@@ -12,6 +12,7 @@ const generateAcessAndRefreshToken=async (userId) => {
    await user.save({validateBeforeSave:false})
    return{accessToken,refreshToken}
   } catch (error) {
+    console.log(error)
     throw new ApiError(500,"someThing went Wrong  while generating AcessAndRefreshToken")
   }
 }
@@ -80,7 +81,7 @@ const loginUser=asyncHandler(async(req,res)=>{
    if(!username&&!email){
     throw new ApiError(400,"Username or email required")
    }
-  const user=  await User.find({
+  const user=  await User.findOne({
     $or:[{username},{email}]
    })
    if(!user){
@@ -92,8 +93,7 @@ const loginUser=asyncHandler(async(req,res)=>{
     throw new ApiError(401,"Invalid User Credentials")
    }
    //generating tokens
-   const{accessToken,refreshToken}=await
-   generateAcessAndRefreshToken(user._id)
+   const{accessToken,refreshToken}= await generateAccessAndRefreshToken(user._id)
   const loggedInUser= await User.findById(user._id).select("-password -refreshToken")
 //sending cookies
 const options ={
