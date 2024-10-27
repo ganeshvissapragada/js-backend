@@ -310,7 +310,7 @@ const subsscriberCount=asyncHandler(async(req,res)=>{
               else:false
             }
           }
-      },
+      }},
       {
         $project:{
               fullname:1,
@@ -322,7 +322,7 @@ const subsscriberCount=asyncHandler(async(req,res)=>{
               coverImage:1,
               email:1
         }
-      }
+      
      }
 
   ])
